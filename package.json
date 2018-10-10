@@ -1,6 +1,10 @@
 {
   "name": "@clipchamp/ng-builders",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clipchamp/ng-builders"
+  },
   "keywords": [
     "angular",
     "stryker",
