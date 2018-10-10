@@ -1,0 +1,6 @@
+{
+  "id": "StrykerBuilderSchema",
+  "title": "Stryker builder",
+  "description": "Stryker builder options",
+  "properties": {}
+}
