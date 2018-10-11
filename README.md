@@ -1,5 +1,9 @@
 # Angular Stryker Builder
 
+[![Build Status](https://travis-ci.org/clipchamp/ng-builders.svg?branch=master)](https://travis-ci.org/clipchamp/ng-builders)
+[![npm](https://img.shields.io/npm/dt/@clipchamp/ng-builders.svg)](https://www.npmjs.com/package/@clipchamp/ng-builders)
+[![npm](https://img.shields.io/npm/v/@clipchamp/ng-builders.svg)](https://www.npmjs.com/package/@clipchamp/ng-builders)
+
 Easily integrate the Stryker Mutator framework for mutation testing into your Angular app(s).
 
 ## Installation
