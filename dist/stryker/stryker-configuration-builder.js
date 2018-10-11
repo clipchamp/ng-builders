@@ -12,24 +12,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = require("fs");
 const core_1 = require("@angular-devkit/core");
 const config_1 = require("stryker-api/config");
-const DEFAULT_CONFIG = {
-    mutator: 'typescript',
-    testRunner: 'jest',
-    coverageAnalysis: 'off'
-};
 class StrykerConfigurationBuilder {
     constructor(logger) {
         this.logger = logger;
     }
     buildConfiguration(root, sourceRoot, workspaceRoot, options) {
-        const { configFile } = options, cliConfig = __rest(options, ["configFile"]);
+        const { configPath } = options, cliConfig = __rest(options, ["configPath"]);
         const configRoot = root === '' ? sourceRoot || core_1.normalize('') : root;
         const projectRoot = core_1.resolve(workspaceRoot, configRoot);
         const config = new config_1.Config();
-        config.set(DEFAULT_CONFIG);
-        if (configFile) {
-            const pathToGlobalConfig = core_1.getSystemPath(core_1.join(workspaceRoot, configFile));
-            const pathToProjectConfig = core_1.getSystemPath(core_1.join(projectRoot, configFile));
+        if (configPath) {
+            const pathToGlobalConfig = core_1.getSystemPath(core_1.join(workspaceRoot, configPath));
+            const pathToProjectConfig = core_1.getSystemPath(core_1.join(projectRoot, configPath));
             if (!fs_1.existsSync(pathToGlobalConfig)) {
                 this.logger.warn(`warning: unable to locate custom global stryker config file at path ${pathToGlobalConfig}`);
             }

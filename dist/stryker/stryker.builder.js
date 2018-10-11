@@ -17,15 +17,12 @@ class StrykerBuilder {
             strykerInstance
                 .runMutationTest()
                 .then(results => {
-                // do something with results
-                this.context.logger.info(JSON.stringify(results));
                 observer.next({
                     success: true
                 });
                 observer.complete();
             })
                 .catch(err => {
-                this.context.logger.error(JSON.stringify(err));
                 observer.next({ success: false });
                 observer.complete();
             });
