@@ -1,5 +1,8 @@
+# Angular Stryker Builder
 
-# Installation
+Easily integrate the Stryker Mutator framework for mutation testing into your Angular app(s).
+
+## Installation
 
 1. Install Stryker and the necessary plugins for your Angular app
 ```
@@ -10,29 +13,32 @@ npm i -D stryker stryker-api stryker-typescript stryker-jest-runner
 npm i -D @clipchamp/ng-builders
 ```
 3. Add custom architect config to your angular.json
-```json
-    [...]
-    "lint":  { 
-	    "builder":  "@angular-devkit/build-angular:tslint",
-	    "options":  {
-		    "tsConfig":  ["src/tsconfig.json",  "src/tsconfig.spec.json"],
-		    "exclude":  ["**/node_modules/**"]
-	    }
-    },
-	"mutate":  {
-		"builder":  "@clipchamp/ng-builders:run-stryker",
-		"options":  {
-			"configPath": "...." // path is relative to the project folder or workspace root (both are checked),
-			"mutator": "typescript",
-			[...]
-		}
-	},
-	[...]
 ```
-4. Configure Stryker:
+[...]
+"lint":  { 
+    "builder":  "@angular-devkit/build-angular:tslint",
+    "options":  {
+	    "tsConfig":  ["src/tsconfig.json",  "src/tsconfig.spec.json"],
+	    "exclude":  ["**/node_modules/**"]
+    }
+},
+"mutate":  {
+    	"builder":  "@clipchamp/ng-builders:run-stryker",
+	"options":  {
+		"configPath": "...." // path is relative to the project folder or workspace root (both are checked),
+		"mutator": "typescript",
+		[...]
+	}
+},
+[...]
+```
+
+## Configuration
+
 You can either pass a configuration file through the options object in the architect or configure Stryker directly there.
 
-5. Run Stryker:
+## Usage
+Depending on how you called your architect you need to change this command.
 ```
     ng run my-app:mutate
 ```
