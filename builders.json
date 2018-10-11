@@ -2,7 +2,7 @@
   "$schema": "@angular-devkit/architect/src/builders-schema.json",
   "builders": {
     "run-stryker": {
-      "class": "./src/stryker/stryker.builder.js",
+      "class": "./dist/stryker/stryker.builder.js",
       "schema": "./src/stryker/schema.json",
       "description": "Builder for Stryker Mutator"
     }

@@ -7,36 +7,40 @@ import {
 import { StrykerBuilderSchema } from './schema';
 import { Observable } from 'rxjs';
 import Stryker from 'stryker';
-import { LogLevel } from 'stryker-api/core';
+import { StrykerConfigurationBuilder } from './stryker-configuration-builder';
 
 export default class StrykerBuilder implements Builder<StrykerBuilderSchema> {
-  constructor(private context: BuilderContext) {}
+  private readonly configBuilder: StrykerConfigurationBuilder;
+
+  constructor(private context: BuilderContext) {
+    this.configBuilder = new StrykerConfigurationBuilder(context.logger);
+  }
 
   run(
     builderConfig: BuilderConfiguration<Partial<StrykerBuilderSchema>>
   ): Observable<BuildEvent> {
-    const root = this.context.workspace.root;
+    const { root, sourceRoot, options } = builderConfig;
+    const workspaceRoot = this.context.workspace.root;
+    const config = this.configBuilder.buildConfiguration(
+      root,
+      sourceRoot,
+      workspaceRoot,
+      options
+    );
     return new Observable<BuildEvent>(observer => {
-      const strykerInstance = new Stryker({
-        mutator: 'typescript',
-        testRunner: 'jest',
-        transpilers: [],
-        coverageAnalysis: 'off',
-        mutate: [root],
-        files: [root],
-        logLevel: LogLevel.Information,
-        maxConcurrentTestRunners: 4
-      });
+      const strykerInstance = new Stryker(config);
       strykerInstance
         .runMutationTest()
         .then(results => {
           observer.next({
             success: true
           });
-          // do something with results
-          console.warn(results);
+          observer.complete();
         })
-        .catch(() => observer.next({ success: false }));
+        .catch(err => {
+          observer.next({ success: false });
+          observer.complete();
+        });
     });
   }
 }

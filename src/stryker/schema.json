@@ -2,5 +2,94 @@
   "id": "StrykerBuilderSchema",
   "title": "Stryker builder",
   "description": "Stryker builder options",
-  "properties": {}
+  "properties": {
+    "configPath": {
+      "type": "string",
+      "description": "Path to a custom stryker config file."
+    },
+    "mutate": {
+      "type": "array",
+      "description": "With mutate you configure the subset of files to use for mutation testing. Generally speaking, these should be your own source files.",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "files": {
+      "type": "array",
+      "description": "With files you can choose which files should be included in your test runner sandbox.",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "reporters": {
+      "type": "array",
+      "description": "With reporters you can set the reporters for stryker to use. These reporters can be used out of the box: clear-text, progress, dots, dashboard and event-recorder.",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "testRunner": {
+      "type": "string",
+      "description": "With testRunner you specify the test runner that Stryker uses to run your tests."
+    },
+    "testFramework": {
+      "type": "string",
+      "description": "Configure which test framework you are using. This option is not mandatory, as Stryker is test framework agnostic (it doesn't care what framework you use)."
+    },
+    "transpilers": {
+      "type": "array",
+      "description": "With transpilers you configure which transpiler plugins should transpile the code before it's executed.",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "plugins": {
+      "type": "array",
+      "description": "With plugins you can add additional Node modules for Stryker to load (or require).",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "port": {
+      "type": "number",
+      "description": "With port you specify the first port to pass on to the test runner to use. Any additional test runners will be spawned using ports n+1, n+2."
+    },
+    "timeoutMS": {
+      "type": "number",
+      "description": "When Stryker is mutating code, it cannot determine indefinitely whether or not a code mutation results in an infinite loop (see Halting problem). In order to battle infinite loops, a test run gets killed after a certain period of time. This period is configurable with two settings: timeoutMS and timeoutFactor. timeoutForTestRunMs = netTimeMs * timeoutFactor + timeoutMS + overheadMs"
+    },
+    "timeoutFactor": {
+      "type": "number",
+      "description": "See timeoutMS"
+    },
+    "maxConcurrentTestRunners": {
+      "type": "number",
+      "description": "Specifies the maximum number of concurrent test runners to spawn."
+    },
+    "symlinkNodeModules": {
+      "type": "boolean",
+      "description": "The symlinkNodeModules value indicates whether or not Stryker should create a symbolic link to your current node_modules directory in the sandbox directories."
+    },
+    "coverageAnalysis": {
+      "type": "string",
+      "description": "With coverageAnalysis you specify which coverage analysis strategy you want to use. Possible values: off, all and perTest."
+    },
+    "mutator": {
+      "type": "string",
+      "description": "With mutator you configure which mutator plugin you want to use, and optionally, which mutation types to exclude from the test run."
+    },
+    "logLevel": {
+      "type": "string",
+      "description": "Set the log level that Stryker uses to write to the console. Possible values: off, fatal, error, warn, info, debug and trace."
+    },
+    "fileLogLevel": {
+      "type": "string",
+      "description": "Set the log level that Stryker uses to write to the 'stryker.log' file. Possible values: off, fatal, error, warn, info, debug and trace."
+    }
+  }
 }
