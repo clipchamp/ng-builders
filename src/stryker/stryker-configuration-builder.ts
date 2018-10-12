@@ -20,7 +20,7 @@ export class StrykerConfigurationBuilder {
     workspaceRoot: Path,
     options: Partial<StrykerBuilderSchema>
   ): StrykerOptions {
-    const { configPath, ...cliConfig } = options;
+    const { configPath, restrictToFolder, ...cliConfig } = options;
 
     const configRoot = root === '' ? sourceRoot || normalize('') : root;
     const projectRoot: Path = resolve(workspaceRoot, configRoot);
@@ -57,6 +57,25 @@ export class StrykerConfigurationBuilder {
           }
           config.set({ key: cliConfig[key] });
         }
+      }
+    }
+
+    // TODO: This is super specific to our use case right now - need to revisit this later...
+    if (restrictToFolder) {
+      const filesToMutate = `${restrictToFolder}/**/*.ts`;
+      const specs = `!${restrictToFolder}/**/*.spec.ts`;
+      const stubs = `!${restrictToFolder}/**/*.stub.ts`;
+      const includeSpecs = `${restrictToFolder}/**/*.spec.ts`;
+      config.set({
+        mutate: [filesToMutate, specs, stubs],
+        files: [...config.files, includeSpecs]
+      })
+      if (config.htmlReporter) {
+        config.set({
+          htmlReporter: {
+            baseDir: `${config.htmlReporter.baseDir}/${restrictToFolder}`
+          }
+        })
       }
     }
 

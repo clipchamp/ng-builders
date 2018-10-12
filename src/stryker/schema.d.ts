@@ -18,5 +18,6 @@ export interface StrykerBuilderSchema {
   timeoutFactor?: number;
   plugins?: string[];
   port?: number;
+  restrictToFolder?: string;
   [custom: string]: any;
 }

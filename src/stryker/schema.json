@@ -90,6 +90,10 @@
     "fileLogLevel": {
       "type": "string",
       "description": "Set the log level that Stryker uses to write to the 'stryker.log' file. Possible values: off, fatal, error, warn, info, debug and trace."
+    },
+    "restrictToFolder": {
+      "type": "string",
+      "description": "Restrict to a sub-folder of the source root. Overwrites mutates."
     }
   }
 }
