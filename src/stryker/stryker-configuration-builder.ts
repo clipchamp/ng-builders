@@ -55,7 +55,7 @@ export class StrykerConfigurationBuilder {
           if (Array.isArray(cliConfig[key]) && cliConfig[key].length === 0) {
             continue;
           }
-          config.set({ key: cliConfig[key] });
+          config.set({ [key]: cliConfig[key] });
         }
       }
     }
