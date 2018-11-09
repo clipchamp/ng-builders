@@ -1,0 +1,33 @@
+{
+  "id": "GCloudBuilderSchema",
+  "title": "GCloud builder",
+  "description": "GCloud builder options",
+  "properties": {
+    "browserTarget": {
+      "type": "string",
+      "description": "Target to serve."
+    },
+    "applicationName": {
+      "type": "string",
+      "description": "Google Cloud project name."
+    },
+    "version": {
+      "type": "string",
+      "description": "Version name."
+    },
+    "withoutActivation": {
+      "type": "boolean",
+      "description": "Flag indicating whether to activate new version after deployment.",
+      "default": true
+    },
+    "yamlFilePath": {
+      "type": "string",
+      "description": "Path to yaml file to deploy."
+    },
+    "requireLogin": {
+      "type": "boolean",
+      "description": "Secure application with login.",
+      "default": true
+    }
+  }
+}
