@@ -1,10 +1,15 @@
 {
   "$schema": "@angular-devkit/architect/src/builders-schema.json",
   "builders": {
-    "run-stryker": {
+    "stryker": {
       "class": "./dist/stryker/stryker.builder.js",
       "schema": "./src/stryker/schema.json",
       "description": "Builder for Stryker Mutator"
+    },
+    "gcloud": {
+      "class": "./dist/gcloud/gcloud.builder.js",
+      "schema": "./src/gcloud/schema.json",
+      "description": "Builder to run gcloud commands"
     }
   }
 }
