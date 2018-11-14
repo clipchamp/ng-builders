@@ -1,177 +1,156 @@
+import { copyFile } from 'fs';
 import {
-  Builder,
-  BuilderConfiguration,
-  BuildEvent,
-  BuilderContext
+    Builder,
+    BuilderConfiguration,
+    BuildEvent,
+    BuilderContext
 } from '@angular-devkit/architect';
 import { NormalizedBrowserBuilderSchema } from '@angular-devkit/build-angular';
 import { Observable, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { join, getSystemPath, Path } from '@angular-devkit/core';
-import { copyFileSync } from './copy.utils';
+import { join, getSystemPath } from '@angular-devkit/core';
 import { exec } from './exec.utils';
-import { getGitInfo } from './git.utils';
-import { readFileSync } from 'fs';
-
-const yaml = require('yamljs');
 
 interface GCloudBuilderOptions {
-  browserTarget: string;
-  applicationName?: string;
-  version?: string;
-  withoutActivation: boolean;
-  yamlFilePath: string;
-  requireLogin: boolean;
+    browserTarget: string;
+    applicationName?: string;
+    version?: string;
+    withoutActivation: boolean;
+    yamlFilePath: string;
+    distFolder?: string;
+    oAuth2AccessToken?: string;
+    deployConfigPath?: string;
 }
 
-function createArrayBuffer(buffer: Buffer): ArrayBuffer {
-  const arrayBuffer = new ArrayBuffer(buffer.length);
-  const view = new Uint8Array(arrayBuffer);
-  for (let i = 0; i < buffer.length; i++) {
-    view[i] = buffer[i];
-  }
-  return arrayBuffer;
-}
+type BeforeDeployHook = (
+    options: GCloudBuilderOptions,
+    targetOptions: NormalizedBrowserBuilderSchema
+) => GCloudBuilderOptions | Promise<GCloudBuilderOptions>;
+type AfterDeployHook = (options: GCloudBuilderOptions) => void | Promise<void>;
 
 export default class GCloudBuilder implements Builder<GCloudBuilderOptions> {
-  constructor(private context: BuilderContext) {}
+    private beforeDeployHook: BeforeDeployHook = options => options;
+    private afterDeployHook: AfterDeployHook = () => {};
 
-  run(
-    builderConfig: BuilderConfiguration<GCloudBuilderOptions>
-  ): Observable<BuildEvent> {
-    if (!builderConfig.options.applicationName) {
-      builderConfig.options.applicationName = process.env.CUSTOM_GAE_PROJECT_ID;
-    }
+    constructor(private context: BuilderContext) {}
 
-    if (!builderConfig.options.applicationName) {
-      this.context.logger.log('error', 'No application name given');
-      return of({
-        success: false
-      });
-    }
-
-    const architect = this.context.architect;
-    const [
-      project,
-      target,
-      configuration
-    ] = builderConfig.options.browserTarget.split(':');
-    const targetSpec = { project, target, configuration };
-    const targetConfig = architect.getBuilderConfiguration<
-      NormalizedBrowserBuilderSchema
-    >(targetSpec);
-
-    const originalOutputPath = targetConfig.options.outputPath;
-    targetConfig.options.outputPath += '/static';
-
-    return architect.run(targetConfig, this.context).pipe(
-      switchMap(buildEvent => {
-        if (!buildEvent.success) {
-          return of(buildEvent);
-        }
-        const root = this.context.workspace.root;
-        const yamlFilePath = builderConfig.options.yamlFilePath;
-
-        this.copyYamlFile(root, originalOutputPath, yamlFilePath);
-        const requireLogin = builderConfig.options.requireLogin
-          ? this.requireLogin(root, originalOutputPath, yamlFilePath)
-          : Promise.resolve();
-        return requireLogin.then(() =>
-          this.deployToGcloud(
-            getSystemPath(join(root, originalOutputPath)),
-            builderConfig.options
-          )
+    run({ options }: BuilderConfiguration<GCloudBuilderOptions>): Observable<BuildEvent> {
+        const architect = this.context.architect;
+        const [project, target, configuration] = options.browserTarget.split(':');
+        const targetSpec = { project, target, configuration };
+        const targetConfig = architect.getBuilderConfiguration<NormalizedBrowserBuilderSchema>(
+            targetSpec
         );
-      })
-    );
-  }
 
-  requireLogin(
-    root: Path,
-    distFolder: string,
-    yamlFilePath: string
-  ): Promise<void> {
-    const yamlFile = yamlFilePath.split('/').pop();
-    const distYamlFilePath = join(root, distFolder, yamlFile);
-    const file = readFileSync(getSystemPath(distYamlFilePath));
-    const existingConfig = yaml.parse(file.toString());
-    const patchedHandlers = existingConfig.handlers.map((handler: any) => ({
-      ...handler,
-      login: 'admin'
-    }));
-    const patchedAppConfig = { ...existingConfig, handlers: patchedHandlers };
+        const { yamlFilePath, distFolder } = options;
+        const yamlFile = yamlFilePath.split('/').pop();
+        const workspaceRoot = this.context.workspace.root;
+        const outputPath = targetConfig.options.outputPath;
+        const modifiedOutputPath = distFolder ? outputPath + '/' + distFolder : outputPath;
+        const srcYamlPath = getSystemPath(join(workspaceRoot, yamlFilePath));
+        const distYamlPath = getSystemPath(join(workspaceRoot, outputPath, yamlFile));
 
-    return this.context.workspace.host
-      .write(
-        distYamlFilePath,
-        createArrayBuffer(new Buffer(yaml.stringify(patchedAppConfig, 3)))
-      )
-      .toPromise();
-  }
+        if (
+            options.deployConfigPath &&
+            this.context.host.exists(join(workspaceRoot, options.deployConfigPath))
+        ) {
+            const { beforeDeployHook, afterDeployHook } = require(getSystemPath(
+                join(workspaceRoot, options.deployConfigPath)
+            ));
+            if (beforeDeployHook) {
+                this.beforeDeployHook = beforeDeployHook;
+            }
+            if (afterDeployHook) {
+                this.afterDeployHook = afterDeployHook;
+            }
+        }
 
-  copyYamlFile(root: Path, outputPath: string, yamlFilePath: string): void {
-    const distFolder = getSystemPath(join(root, outputPath));
-    const sourceYamlFilePath = getSystemPath(join(root, yamlFilePath));
-    const yamlFile = sourceYamlFilePath.split('/').pop();
-    copyFileSync(sourceYamlFilePath, distFolder + '/' + yamlFile);
-  }
-
-  async deployToGcloud(
-    distFolder: string,
-    options: GCloudBuilderOptions
-  ): Promise<BuildEvent> {
-    const cmd = 'gcloud';
-
-    let args = ['app', 'deploy'];
-
-    if (process.env.GOOGLE_OAUTH_TOKEN !== undefined) {
-      args = args.concat([
-        '--oauth2_access_token',
-        process.env.GOOGLE_OAUTH_TOKEN
-      ]);
+        return architect
+            .run(
+                {
+                    ...targetConfig,
+                    options: { ...targetConfig.options, outputPath: modifiedOutputPath }
+                },
+                this.context
+            )
+            .pipe(
+                switchMap(buildEvent => {
+                    if (!buildEvent.success) {
+                        return of(buildEvent);
+                    }
+                    return this.copyFile(srcYamlPath, distYamlPath)
+                        .then(() =>
+                            Promise.resolve(this.beforeDeployHook(options, targetConfig.options))
+                        )
+                        .then(newOptions => {
+                            if (!newOptions.applicationName) {
+                                return {
+                                    success: false
+                                };
+                            }
+                            return this.deployToGcloud(outputPath, yamlFile, newOptions);
+                        })
+                        .then(buildEvent => {
+                            if (!buildEvent.success) {
+                                return buildEvent;
+                            }
+                            return Promise.resolve(this.afterDeployHook(options)).then(
+                                () => buildEvent
+                            );
+                        });
+                })
+            );
     }
 
-    const yamlFile = options.yamlFilePath.split('/').pop();
-
-    if (!options.version) {
-      const { short: commitId } = await getGitInfo();
-      options.version = commitId;
+    copyFile(srcPath: string, distPath: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            copyFile(srcPath, distPath, err => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve();
+            });
+        });
     }
 
-    args = args
-      .concat([
-        '--project',
-        options.applicationName,
-        '--version',
-        options.version,
-        '--quiet'
-      ])
-      .concat(
-        !options.withoutActivation
-          ? ['--stop-previous-version', '--promote']
-          : [
-              '--no-stop-previous-version', // We keep the previous version going until we have finalized the deployment
-              '--no-promote' // We do not yet send any traffic to the new version
-            ]
-      )
-      .concat([yamlFile]);
+    async deployToGcloud(
+        path: string,
+        yamlFile: string,
+        options: GCloudBuilderOptions
+    ): Promise<BuildEvent> {
+        const cmd = 'gcloud';
+        let args = ['app', 'deploy'];
 
-    this.context.logger.log(
-      'info',
-      `*** Deploying "${options.applicationName}" with arguments: ${args.join(
-        ' '
-      )}`
-    );
+        if (options.oAuth2AccessToken) {
+            args = args.concat(['--oauth2_access_token', options.oAuth2AccessToken]);
+        }
 
-    try {
-      await exec(cmd, args, distFolder, (logLevel, line) => {
-        this.context.logger.log(logLevel as any, line);
-      });
-      this.context.logger.log('info', 'Finished deployment');
-      return { success: true };
-    } catch (err) {
-      this.context.logger.log('error', 'Deployment failed', err);
-      return { success: false };
+        args = args
+            .concat(['--project', options.applicationName, '--version', options.version, '--quiet'])
+            .concat(
+                !options.withoutActivation
+                    ? ['--stop-previous-version', '--promote']
+                    : [
+                          '--no-stop-previous-version', // We keep the previous version going until we have finalized the deployment
+                          '--no-promote' // We do not yet send any traffic to the new version
+                      ]
+            )
+            .concat([yamlFile]);
+
+        this.context.logger.log(
+            'info',
+            `*** Deploying "${options.applicationName}" with arguments: ${args.join(' ')}`
+        );
+
+        try {
+            await exec(cmd, args, path, (logLevel, line) => {
+                this.context.logger.log(logLevel as any, line);
+            });
+            this.context.logger.log('info', 'Finished deployment');
+            return { success: true };
+        } catch (err) {
+            this.context.logger.log('error', 'Deployment failed', err);
+            return { success: false };
+        }
     }
-  }
 }

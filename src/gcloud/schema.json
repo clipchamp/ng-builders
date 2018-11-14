@@ -24,10 +24,19 @@
       "type": "string",
       "description": "Path to yaml file to deploy."
     },
-    "requireLogin": {
-      "type": "boolean",
-      "description": "Secure application with login.",
-      "default": true
+    "distFolder": {
+      "type": "string",
+      "description": "Sub folder to put output in."
+    },
+    "oAuth2AccessToken": {
+      "type": "string",
+      "description": "OAuth2 access token for Google Cloud."
+    },
+    "deployConfigPath": {
+      "type": "string",
+      "description": "Path to config file exposing before and after deploy hooks."
     }
-  }
+  },
+	"additionalProperties": false,
+	"required": ["browserTarget", "yamlFilePath"]
 }
