@@ -12,7 +12,10 @@
     "mutation testing",
     "testing",
     "builder",
-    "angular cli"
+    "angular cli",
+    "gcloud",
+    "app engine",
+    "deploy"
   ],
   "scripts": {
     "build": "./node_modules/.bin/tsc",

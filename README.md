@@ -4,6 +4,8 @@
 [![npm](https://img.shields.io/npm/dt/@clipchamp/ng-builders.svg)](https://www.npmjs.com/package/@clipchamp/ng-builders)
 [![npm](https://img.shields.io/npm/v/@clipchamp/ng-builders.svg)](https://www.npmjs.com/package/@clipchamp/ng-builders)
 
+This package provides Angular CLI builders for the Stryker Mutator framework and Google Cloud deployments.
+
 ## Stryker Builder
 
 Easily integrate the Stryker Mutator framework for mutation testing into your Angular app(s).
