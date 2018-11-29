@@ -33,6 +33,7 @@
     "@types/node": "^10.11.7",
     "jest": "^23.3.0",
     "lodash": "^4.17.11",
+    "prettier": "^1.15.2",
     "stryker": "^0.29.5",
     "stryker-api": "^0.21.2",
     "stryker-jest-runner": "^1.2.2",
@@ -48,9 +49,5 @@
     "stryker-api": "^0.21.2",
     "stryker-jest-runner": "^1.2.2",
     "stryker-typescript": "^0.15.0"
-  },
-  "dependencies": {
-    "prettier": "^1.15.2",
-    "yamljs": "^0.3.0"
   }
 }
