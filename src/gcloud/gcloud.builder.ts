@@ -20,6 +20,7 @@ interface GCloudBuilderOptions {
     distFolder?: string;
     oAuth2AccessToken?: string;
     deployConfigPath?: string;
+    skipBuild?: boolean;
 }
 
 type BeforeDeployHook = (

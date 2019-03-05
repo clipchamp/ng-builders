@@ -35,6 +35,10 @@
     "deployConfigPath": {
       "type": "string",
       "description": "Path to config file exposing before and after deploy hooks."
+    },
+    "skipBuild": {
+        "type": "boolean",
+        "description": "Skip build step"
     }
   },
 	"additionalProperties": false,
