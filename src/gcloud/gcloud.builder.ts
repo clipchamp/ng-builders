@@ -1,14 +1,9 @@
-import { copyFile } from 'fs';
-import {
-    Builder,
-    BuilderConfiguration,
-    BuildEvent,
-    BuilderContext
-} from '@angular-devkit/architect';
+import { Builder, BuilderConfiguration, BuilderContext, BuildEvent } from '@angular-devkit/architect';
 import { NormalizedBrowserBuilderSchema } from '@angular-devkit/build-angular';
+import { getSystemPath, join } from '@angular-devkit/core';
+import { copyFile } from 'fs';
 import { Observable, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { join, getSystemPath } from '@angular-devkit/core';
 import { exec } from './exec.utils';
 
 interface GCloudBuilderOptions {
@@ -66,41 +61,43 @@ export default class GCloudBuilder implements Builder<GCloudBuilderOptions> {
             }
         }
 
-        return architect
-            .run(
-                {
-                    ...targetConfig,
-                    options: { ...targetConfig.options, outputPath: modifiedOutputPath }
-                },
-                this.context
-            )
-            .pipe(
-                switchMap(buildEvent => {
-                    if (!buildEvent.success) {
-                        return of(buildEvent);
-                    }
-                    return this.copyFile(srcYamlPath, distYamlPath)
-                        .then(() =>
-                            Promise.resolve(this.beforeDeployHook(options, targetConfig.options))
-                        )
-                        .then(newOptions => {
-                            if (!newOptions.applicationName) {
-                                return {
-                                    success: false
-                                };
-                            }
-                            return this.deployToGcloud(outputPath, yamlFile, newOptions);
-                        })
-                        .then(buildEvent => {
-                            if (!buildEvent.success) {
-                                return buildEvent;
-                            }
-                            return Promise.resolve(this.afterDeployHook(options)).then(
-                                () => buildEvent
-                            );
-                        });
-                })
-            );
+        const build = options.skipBuild
+            ? of({ success: true })
+            : architect.run(
+                  {
+                      ...targetConfig,
+                      options: { ...targetConfig.options, outputPath: modifiedOutputPath }
+                  },
+                  this.context
+              );
+
+        return build.pipe(
+            switchMap(buildEvent => {
+                if (!buildEvent.success) {
+                    return of(buildEvent);
+                }
+                return this.copyFile(srcYamlPath, distYamlPath)
+                    .then(() =>
+                        Promise.resolve(this.beforeDeployHook(options, targetConfig.options))
+                    )
+                    .then(newOptions => {
+                        if (!newOptions.applicationName) {
+                            return {
+                                success: false
+                            };
+                        }
+                        return this.deployToGcloud(outputPath, yamlFile, newOptions);
+                    })
+                    .then(buildEvent => {
+                        if (!buildEvent.success) {
+                            return buildEvent;
+                        }
+                        return Promise.resolve(this.afterDeployHook(options)).then(
+                            () => buildEvent
+                        );
+                    });
+            })
+        );
     }
 
     copyFile(srcPath: string, distPath: string): Promise<void> {
